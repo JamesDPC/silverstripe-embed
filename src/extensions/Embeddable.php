@@ -162,51 +162,12 @@ class Embeddable extends DataExtension
                 $owner->EmbedDescription = $embed->description;
             }
             $changes = $owner->getChangedFields();
-            if (isset($changes['EmbedSourceURL']) && !$owner->EmbedImageID) {
+            if (isset($changes['EmbedSourceURL'])) {
                 $owner->EmbedHTML = $embed->code->html;
                 $owner->EmbedType = 'video';
                 $owner->EmbedWidth = $embed->code->width;
                 $owner->EmbedHeight = $embed->code->height;
                 $owner->EmbedAspectRatio = $embed->code->ratio;
-
-                if ($owner->EmbedSourceImageURL != (string) $embed->image) {
-                    $owner->EmbedSourceImageURL = (string) $embed->image;
-                    $fileExplode = explode('.', $embed->image);
-                    $fileExtension = end($fileExplode);
-                    $fileName = Convert::raw2url($owner->obj('EmbedTitle')->LimitCharacters(55)) . '.' . $fileExtension;
-                    $parentFolder = Folder::find_or_make($owner->EmbedFolder);
-
-                    $imageObject = DataObject::get_one(
-                        Image::class,
-                        [
-                            'Name' => $fileName,
-                            'ParentID' => $parentFolder->ID
-                        ]
-                    );
-                    if(!$imageObject){
-                        // Save image to server
-                        $imageObject = Image::create();
-                        $imageObject->setFromString(
-                            file_get_contents($embed->image),
-                            $owner->EmbedFolder . '/' . $fileName,
-                            null,
-                            null,
-                            [
-                                'conflict' => AssetStore::CONFLICT_OVERWRITE
-                            ]
-                        );
-                    }
-
-                    // Check existing for image object or create new
-                    $imageObject->ParentID = $parentFolder->ID;
-                    $imageObject->Name = $fileName;
-                    $imageObject->Title = $embed->title;
-                    $imageObject->OwnerID = (Member::currentUserID() ? Member::currentUserID() : 0);
-                    $imageObject->ShowInSearch = false;
-                    $imageObject->write();
-
-                    $owner->EmbedImageID = $imageObject->ID;
-                }
             }
         }
     }
@@ -218,31 +179,6 @@ class Embeddable extends DataExtension
     {
         return $this->owner->config()->get('allowed_embed_types');
     }
-
-    /**
-     * @param  ValidationResult $validationResult
-     * @return ValidationResult
-     */
-    /* remove as `type` detector was removed from Embed 4
-    public function validate(ValidationResult $validationResult)
-    {
-        $owner = $this->owner;
-        $allowed_types = $owner->AllowedEmbedTypes;
-        $sourceURL = $owner->EmbedSourceURL;
-        if ($sourceURL && isset($allowed_types)) {
-            $embed = new Embed();
-            $embed = $embed->get($sourceURL);
-            if (!in_array($embed->Type, $allowed_types)) {
-                $string = implode(', ', $allowed_types);
-                $string = (substr($string, -1) == ',') ? substr_replace($string, ' or', -1) : $string;
-                $validationResult->addError(
-                    _t(__CLASS__ . '.ERRORNOTSTRING', "The embed content is not a $string")
-                );
-            }
-        }
-        return $validationResult;
-    }
-    */
 
     /**
      * @return string
