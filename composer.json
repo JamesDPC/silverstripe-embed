@@ -17,8 +17,8 @@
   "homepage": "http://github.com/gorriecoe/silverstripe-embed",
   "require": {
     "embed/embed": "^4",
-    "silverstripe/framework": "^4",
-    "gorriecoe/silverstripe-htmltag": "^1.0"
+    "silverstripe/framework": "^5",
+    "gorriecoe/silverstripe-htmltag": "*"
   },
   "extra": {
     "installer-name": "embed"
